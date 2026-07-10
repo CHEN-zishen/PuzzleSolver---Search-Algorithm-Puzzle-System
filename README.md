@@ -42,12 +42,12 @@
 ```mermaid
 graph TD
     A[前端界面] -->|HTTP请求| B[Flask应用]
-    B -->|数据库操作| C[(SQLite)]
+    B -->|数据库操作| DB[(SQLite - site.db)]
     B -->|调用算法| D[算法模块]
     B -->|调用谜题| E[谜题模块]
     B -->|智能问答| F[学习助手]
     
-    subgraph B [Flask应用 - app.py]
+    subgraph Flask应用 - app.py
         B1[用户认证]
         B2[关卡管理]
         B3[求解API]
@@ -55,14 +55,14 @@ graph TD
         B5[助手API]
     end
     
-    subgraph D [算法模块 - algorithms/]
+    subgraph 算法模块 - algorithms/
         D1[DFS]
         D2[BFS]
         D3[A*]
         D4[回溯法]
     end
     
-    subgraph E [谜题模块 - puzzles/]
+    subgraph 谜题模块 - puzzles/
         E1[迷宫]
         E2[八数码]
         E3[N皇后]
@@ -70,15 +70,15 @@ graph TD
         E5[推箱子]
     end
     
-    subgraph F [学习助手 - assistant/]
+    subgraph 学习助手 - assistant/
         F1[本地知识库]
         F2[DeepSeek API]
     end
     
-    subgraph C [(SQLite - site.db)]
-        C1[User]
-        C2[Level]
-        C3[SolveRecord]
+    subgraph SQLite数据库
+        DB1[User]
+        DB2[Level]
+        DB3[SolveRecord]
     end
 ```
 
