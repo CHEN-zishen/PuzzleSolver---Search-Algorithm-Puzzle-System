@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算法知识图谱 - 学习助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .home-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 知识图谱容器 */
+        .knowledge-graph {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .graph-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .graph-header h2 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .graph-header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        /* 知识模块节点 */
+        .nodes-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+            position: relative;
+            padding: 2rem;
+        }
+
+        .node {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+            border: 3px solid rgba(102, 126, 234, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .node:nth-child(1) { animation-delay: 0s; }
+        .node:nth-child(2) { animation-delay: 0.5s; }
+        .node:nth-child(3) { animation-delay: 1s; }
+        .node:nth-child(4) { animation-delay: 1.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .node:hover,
+        .node.active {
+            transform: scale(1.2) translateY(0);
+            animation-play-state: paused;
+            border-color: #667eea;
+            box-shadow: 
+                0 0 30px rgba(102, 126, 234, 0.6),
+                0 0 60px rgba(102, 126, 234, 0.4),
+                0 0 90px rgba(102, 126, 234, 0.2);
+            z-index: 10;
+        }
+
+        .node::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .node:hover::before,
+        .node.active::before {
+            opacity: 1;
+        }
+
+        .node-icon {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .node:hover .node-icon,
+        .node.active .node-icon {
+            transform: scale(1.2);
+        }
+
+        .node-label {
+            font-size: 0.95rem;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 0 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 连接线 */
+        .graph-connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
+            transform-origin: left center;
+            animation: pulseLine 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseLine {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        /* 知识图谱背景装饰 */
+        .graph-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 50%;
+            animation: particleMove 8s linear infinite;
+        }
+
+        @keyframes particleMove {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 知识内容面板 */
+        .content-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        .content-panel.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .content-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .content-title h3 {
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .content-title p {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 知识点卡片 */
+        .knowledge-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .knowledge-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .knowledge-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .knowledge-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .knowledge-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* 可视化示例 */
+        .visualization-section {
+            background: linear-gradient(135deg, rgba(0, 150, 255, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .visualization-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .visualization-title h4 {
+            color: #00d4ff;
+            font-size: 1.2rem;
+        }
+
+        .visualization-content {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .vis-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .vis-box.path {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .vis-box.wall {
+            background: rgba(100, 100, 100, 0.5);
+            border: 2px solid rgba(150, 150, 150, 0.3);
+        }
+
+        .vis-box.start {
+            background: rgba(74, 222, 128, 0.3);
+            border: 2px solid rgba(74, 222, 128, 0.5);
+        }
+
+        .vis-box.goal {
+            background: rgba(251, 191, 36, 0.3);
+            border: 2px solid rgba(251, 191, 36, 0.5);
+        }
+
+        .vis-box.current {
+            background: rgba(102, 126, 234, 0.5);
+            border: 2px solid rgba(102, 126, 234, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 游戏跳转卡片 */
+        .game-link-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .game-icon {
+            font-size: 2.5rem;
+        }
+
+        .game-details h4 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .game-details p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .play-game-btn {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .play-game-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 算法理解 */
+        .algorithm-application {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border-left: 4px solid #fbbf24;
+        }
+
+        .algorithm-application h4 {
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .algorithm-application p {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        /* 代码示例 */
+        .code-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .code-header span {
+            color: #a78bfa;
+            font-size: 0.9rem;
+        }
+
+        code {
+            color: #e2e8f0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            display: block;
+            white-space: pre;
+        }
+
+        /* 聊天面板 */
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .chat-header h4 {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding-right: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message.assistant .message-content {
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 0 15px 15px 15px;
+        }
+
+        .message.user .message-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px 0 15px 15px;
+            margin-left: auto;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.user .message-avatar {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 10px 15px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-input input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .chat-input button:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nodes-container {
+                gap: 1.5rem;
+            }
+
+            .node {
+                width: 100px;
+                height: 100px;
+            }
+
+            .node-icon {
+                font-size: 1.8rem;
+            }
+
+            .node-label {
+                font-size: 0.75rem;
+            }
+
+            .knowledge-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .game-link-card {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🧠 算法知识图谱</h1>
+        <div class="nav-right">
+            <a href="/" class="home-btn">
+                <span>🏠</span>
+                <span>首页</span>
+            </a>
+            <div class="user-info">
+                <span>👤 {{ current_user.username }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="knowledge-graph">
+        <div class="graph-header">
+            <h2>🌐 算法知识图谱</h2>
+            <p>点击下方节点探索不同的算法知识模块</p>
+        </div>
+
+        <!-- 知识图谱节点 -->
+        <div class="nodes-container" id="nodesContainer">
+            <!-- 粒子背景装饰 -->
+            <div class="graph-background">
+                <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+                <div class="particle" style="left: 25%; animation-delay: 1s;"></div>
+                <div class="particle" style="left: 40%; animation-delay: 2s;"></div>
+                <div class="particle" style="left: 55%; animation-delay: 3s;"></div>
+                <div class="particle" style="left: 70%; animation-delay: 4s;"></div>
+                <div class="particle" style="left: 85%; animation-delay: 5s;"></div>
+                <div class="particle" style="left: 15%; animation-delay: 2.5s;"></div>
+                <div class="particle" style="left: 35%; animation-delay: 4.5s;"></div>
+                <div class="particle" style="left: 60%; animation-delay: 1.5s;"></div>
+                <div class="particle" style="left: 80%; animation-delay: 3.5s;"></div>
+            </div>
+            
+            <!-- 连接线 -->
+            <div class="graph-connections">
+                <svg width="100%" height="100%" viewBox="0 0 800 200">
+                    <defs>
+                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.3" />
+                            <stop offset="50%" style="stop-color:#764ba2;stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:#667eea;stop-opacity:0.3" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M 150 100 Q 250 50, 350 100" stroke="url(#lineGradient)" stroke-width="2" fill="none">
+                        <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M 350 100 Q 450 50, 550 100" stroke="url(#lineGradient)" stroke-width="2" fill="none">
+                        <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+                    </path>
+                    <path d="M 550 100 Q 650 50, 750 100" stroke="url(#lineGradient)" stroke-width="2" fill="none">
+                        <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" begin="1s"/>
+                    </path>
+                </svg>
+            </div>
+            
+            <div class="node" data-algo="bfs" onclick="selectAlgorithm('bfs')">
+                <div class="node-icon">🌊</div>
+                <div class="node-label">BFS<br/>广度优先</div>
+            </div>
+            
+            <div class="node" data-algo="dfs" onclick="selectAlgorithm('dfs')">
+                <div class="node-icon">🌲</div>
+                <div class="node-label">DFS<br/>深度优先</div>
+            </div>
+            
+            <div class="node" data-algo="astar" onclick="selectAlgorithm('astar')">
+                <div class="node-icon">⭐</div>
+                <div class="node-label">A*<br/>启发式</div>
+            </div>
+            
+            <div class="node" data-algo="backtrack" onclick="selectAlgorithm('backtrack')">
+                <div class="node-icon">🔄</div>
+                <div class="node-label">回溯法</div>
+            </div>
+        </div>
+
+        <!-- BFS内容 -->
+        <div id="bfs-content" class="content-panel">
+            <div class="content-header">
+                <div class="content-icon">🌊</div>
+                <div class="content-title">
+                    <h3>广度优先搜索 (BFS)</h3>
+                    <p>按层次遍历，保证最短路径</p>
+                </div>
+            </div>
+
+            <div class="knowledge-cards">
+                <div class="knowledge-card">
+                    <h4>🎯 核心概念</h4>
+                    <p>广度优先搜索（Breadth-First Search）是一种图遍历算法，从起始节点开始，逐层向外扩展，先访问所有距离为1的节点，再访问距离为2的节点，以此类推。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>📚 工作原理</h4>
+                    <p>使用队列（Queue）数据结构，遵循"先进先出"原则。每次从队列中取出一个节点，访问其所有未访问的邻居节点，将它们加入队列末尾。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>⚡ 时间复杂度</h4>
+                    <p>O(V + E)，其中V是节点数，E是边数。BFS会访问每个节点和边各一次。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>💡 适用场景</h4>
+                    <p>寻找无权图的最短路径、社交网络中找朋友、迷宫求解、Web爬虫等场景。</p>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <div class="visualization-title">
+                    <span>🔍</span>
+                    <h4>可视化示例：BFS遍历过程</h4>
+                </div>
+                <div class="visualization-content">
+                    <div class="vis-box start">🚶</div>
+                    <div class="vis-box path">0</div>
+                    <div class="vis-box wall">🧱</div>
+                    <div class="vis-box path">0</div>
+                    <div class="vis-box goal">🏁</div>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem; text-align: center;">
+                    BFS特点：按层遍历（蓝色高亮为当前层），保证找到最短路径。从起点(0,0)开始，先访问第1层（右、下），再访问第2层。
+                </p>
+            </div>
+
+            <div class="code-section">
+                <div class="code-header">
+                    <span>📝 Python代码实现</span>
+                </div>
+                <code>def bfs(graph, start):
+    visited = set()
+    queue = [start]
+    visited.add(start)
+    
+    while queue:
+        node = queue.pop(0)
+        print(node, end=' ')
+        
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D', 'E'],
+    'C': ['A', 'F'],
+    'D': ['B'],
+    'E': ['B', 'F'],
+    'F': ['C', 'E']
+}
+
+bfs(graph, 'A')  # 输出: A B C D E F</code>
+            </div>
+
+            <div class="game-link-card">
+                <div class="game-info">
+                    <span class="game-icon">🏃</span>
+                    <div class="game-details">
+                        <h4>迷宫游戏</h4>
+                        <p>使用BFS算法寻找最短路径</p>
+                    </div>
+                </div>
+                <button class="play-game-btn" onclick="playGame('maze')">🎮 开始游戏</button>
+            </div>
+
+            <div class="algorithm-application">
+                <h4>💡 算法理解</h4>
+                <p>在迷宫游戏中，BFS是最适合寻找最短路径的算法。它像水波纹一样向外扩散，第一次到达终点时走过的路径就是最短路径。这是因为BFS按距离递增的顺序访问节点，所以不会错过更短的路径。相比之下，DFS可能会陷入一条很长的死路，无法保证找到最短路径。</p>
+            </div>
+        </div>
+
+        <!-- DFS内容 -->
+        <div id="dfs-content" class="content-panel">
+            <div class="content-header">
+                <div class="content-icon">🌲</div>
+                <div class="content-title">
+                    <h3>深度优先搜索 (DFS)</h3>
+                    <p>深入探索，回溯求解</p>
+                </div>
+            </div>
+
+            <div class="knowledge-cards">
+                <div class="knowledge-card">
+                    <h4>🎯 核心概念</h4>
+                    <p>深度优先搜索（Depth-First Search）是一种图遍历算法，从起始节点开始，沿着一条路径尽可能深地探索，直到无法继续再回溯。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>📚 工作原理</h4>
+                    <p>使用栈（Stack）数据结构，遵循"后进先出"原则。可以用递归或显式栈实现，每次访问一个节点后，立即探索其未访问的子节点。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>⚡ 时间复杂度</h4>
+                    <p>O(V + E)，其中V是节点数，E是边数。与BFS相同，但空间复杂度可能更高（递归栈深度）。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>💡 适用场景</h4>
+                    <p>拓扑排序、连通性检测、路径寻找、N皇后问题、数独求解等需要探索所有可能性的场景。</p>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <div class="visualization-title">
+                    <span>🔍</span>
+                    <h4>可视化示例：DFS遍历过程</h4>
+                </div>
+                <div class="visualization-content">
+                    <div class="vis-box start">🚶</div>
+                    <div class="vis-box current">1</div>
+                    <div class="vis-box wall">🧱</div>
+                    <div class="vis-box path">0</div>
+                    <div class="vis-box path">0</div>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem; text-align: center;">
+                    DFS特点：深入探索（数字表示访问顺序），遇到死路回溯。适合需要探索所有可能性的问题。
+                </p>
+            </div>
+
+            <div class="code-section">
+                <div class="code-header">
+                    <span>📝 Python代码实现</span>
+                </div>
+                <code>def dfs(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+    
+    visited.add(node)
+    print(node, end=' ')
+    
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(graph, neighbor, visited)
+
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D', 'E'],
+    'C': ['A', 'F'],
+    'D': ['B'],
+    'E': ['B', 'F'],
+    'F': ['C', 'E']
+}
+
+dfs(graph, 'A')  # 输出: A B D E F C</code>
+            </div>
+
+            <div class="game-link-card">
+                <div class="game-info">
+                    <span class="game-icon">👑</span>
+                    <div class="game-details">
+                        <h4>N皇后问题</h4>
+                        <p>使用回溯法（DFS变体）放置皇后</p>
+                    </div>
+                </div>
+                <button class="play-game-btn" onclick="playGame('nqueen')">🎮 开始游戏</button>
+            </div>
+
+            <div class="algorithm-application">
+                <h4>💡 算法理解</h4>
+                <p>N皇后问题是DFS回溯算法的经典应用。算法尝试在每行放置一个皇后，检查是否与已放置的皇后冲突（同列或对角线）。如果冲突，就回溯到上一行尝试其他位置。这种"尝试-失败-回溯"的模式正是DFS的精髓，能够系统地探索所有可能的解决方案。</p>
+            </div>
+        </div>
+
+        <!-- A*内容 -->
+        <div id="astar-content" class="content-panel">
+            <div class="content-header">
+                <div class="content-icon">⭐</div>
+                <div class="content-title">
+                    <h3>A* 算法</h3>
+                    <p>启发式搜索，智能寻路</p>
+                </div>
+            </div>
+
+            <div class="knowledge-cards">
+                <div class="knowledge-card">
+                    <h4>🎯 核心概念</h4>
+                    <p>A*是一种启发式搜索算法，结合了Dijkstra算法的准确性和贪心算法的效率，通过启发函数估计到达目标的代价。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>📚 工作原理</h4>
+                    <p>使用优先级队列，每次选择f(n) = g(n) + h(n)最小的节点。g(n)是从起点到n的实际代价，h(n)是从n到终点的估计代价。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>⚡ 启发函数</h4>
+                    <p>常用曼哈顿距离或欧几里得距离作为启发函数。h(n)必须是可采纳的（不超过实际距离），才能保证找到最优解。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>💡 适用场景</h4>
+                    <p>路径规划、游戏AI寻路、八数码问题、地图导航等需要高效找到最优路径的场景。</p>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <div class="visualization-title">
+                    <span>🔍</span>
+                    <h4>可视化示例：A*搜索过程</h4>
+                </div>
+                <div class="visualization-content">
+                    <div class="vis-box start">🚶</div>
+                    <div class="vis-box current">2</div>
+                    <div class="vis-box path">3</div>
+                    <div class="vis-box path">4</div>
+                    <div class="vis-box goal">🏁</div>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem; text-align: center;">
+                    A*特点：数字表示f(n)值，优先选择f值最小的节点。结合了实际代价和启发估计，比BFS更高效。
+                </p>
+            </div>
+
+            <div class="code-section">
+                <div class="code-header">
+                    <span>📝 Python代码实现</span>
+                </div>
+                <code>import heapq
+
+def astar(start, goal, graph, heuristic):
+    open_set = [(0, start)]
+    came_from = {}
+    g_score = {start: 0}
+    
+    while open_set:
+        _, current = heapq.heappop(open_set)
+        
+        if current == goal:
+            return reconstruct_path(came_from, current)
+        
+        for neighbor in graph[current]:
+            tentative_g = g_score[current] + 1
+            
+            if tentative_g < g_score.get(neighbor, float('inf')):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score = tentative_g + heuristic(neighbor, goal)
+                heapq.heappush(open_set, (f_score, neighbor))
+    
+    return None
+
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])  # 曼哈顿距离</code>
+            </div>
+
+            <div class="game-link-card">
+                <div class="game-info">
+                    <span class="game-icon">🧩</span>
+                    <div class="game-details">
+                        <h4>八数码问题</h4>
+                        <p>使用A*算法找到最优解</p>
+                    </div>
+                </div>
+                <button class="play-game-btn" onclick="playGame('eight_puzzle')">🎮 开始游戏</button>
+            </div>
+
+            <div class="algorithm-application">
+                <h4>💡 算法理解</h4>
+                <p>八数码问题是A*算法的经典应用场景。由于状态空间巨大（9!/2 = 181440种状态），BFS效率太低。A*使用曼哈顿距离作为启发函数，能够智能地引导搜索方向，大大减少搜索节点数，快速找到最优解。这展示了启发式搜索在复杂问题中的强大优势。</p>
+            </div>
+        </div>
+
+        <!-- 回溯法内容 -->
+        <div id="backtrack-content" class="content-panel">
+            <div class="content-header">
+                <div class="content-icon">🔄</div>
+                <div class="content-title">
+                    <h3>回溯法</h3>
+                    <p>试错探索，找到所有解</p>
+                </div>
+            </div>
+
+            <div class="knowledge-cards">
+                <div class="knowledge-card">
+                    <h4>🎯 核心概念</h4>
+                    <p>回溯法是一种基于DFS的问题求解策略，通过尝试所有可能的选择，当发现当前选择无法得到有效解时，回溯到上一步尝试其他选择。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>📚 工作原理</h4>
+                    <p>递归地构建解空间树，在每个节点选择一个分支深入探索，如果发现约束不满足则回溯，尝试其他分支。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>⚡ 剪枝技巧</h4>
+                    <p>通过提前判断某些分支不可能产生有效解，避免不必要的搜索，显著提高效率。</p>
+                </div>
+                <div class="knowledge-card">
+                    <h4>💡 适用场景</h4>
+                    <p>组合优化问题、排列组合、N皇后问题、数独求解、子集和问题等需要枚举所有可能性的场景。</p>
+                </div>
+            </div>
+
+            <div class="visualization-section">
+                <div class="visualization-title">
+                    <span>🔍</span>
+                    <h4>可视化示例：回溯过程</h4>
+                </div>
+                <div class="visualization-content">
+                    <div class="vis-box path">✅</div>
+                    <div class="vis-box path">✅</div>
+                    <div class="vis-box current">❌</div>
+                    <div class="vis-box path">↩️</div>
+                    <div class="vis-box path">✅</div>
+                </div>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem; text-align: center;">
+                    回溯特点：尝试→失败→回溯→重新尝试。通过剪枝避免无效搜索路径。
+                </p>
+            </div>
+
+            <div class="code-section">
+                <div class="code-header">
+                    <span>📝 Python代码实现</span>
+                </div>
+                <code>def solve_nqueen(n):
+    result = []
+    board = [-1] * n
+    
+    def is_valid(row, col):
+        for i in range(row):
+            if board[i] == col or abs(board[i]-col) == abs(i-row):
+                return False
+        return True
+    
+    def backtrack(row):
+        if row == n:
+            result.append(board[:])
+            return
+        
+        for col in range(n):
+            if is_valid(row, col):
+                board[row] = col
+                backtrack(row + 1)
+                board[row] = -1
+    
+    backtrack(0)
+    return result
+
+solutions = solve_nqueen(4)
+print(f"4皇后问题共有{len(solutions)}种解法")</code>
+            </div>
+
+            <div class="game-link-card">
+                <div class="game-info">
+                    <span class="game-icon">📝</span>
+                    <div class="game-details">
+                        <h4>数独游戏</h4>
+                        <p>使用回溯法填充数字</p>
+                    </div>
+                </div>
+                <button class="play-game-btn" onclick="playGame('sudoku')">🎮 开始游戏</button>
+            </div>
+
+            <div class="algorithm-application">
+                <h4>💡 算法理解</h4>
+                <p>数独游戏是回溯法的典型应用。算法尝试在每个空格填入1-9的数字，检查是否满足数独规则（同行、同列、同宫格不重复）。如果填入某个数字后无法继续，就回溯到上一个空格尝试其他数字。通过约束传播和剪枝技巧，可以大大提高求解效率。</p>
+            </div>
+        </div>
+
+        <!-- 聊天面板 -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <div class="chat-avatar">🤖</div>
+                <h4>AI学习助手</h4>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">你好！我是你的算法学习助手。选择一个算法节点开始学习，或者问我任何关于算法的问题。</div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="输入你的问题..." onkeydown="if(event.keyCode==13) sendMessage()">
+                <button onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当前选中的算法
+        let currentAlgorithm = '';
+        const nodes = document.querySelectorAll('.node');
+        const panels = document.querySelectorAll('.content-panel');
+
+        // 选择算法
+        function selectAlgorithm(algo) {
+            // 更新节点状态
+            nodes.forEach(node => {
+                node.classList.remove('active');
+                node.style.transform = '';
+            });
+            
+            const selectedNode = document.querySelector(`[data-algo="${algo}"]`);
+            selectedNode.classList.add('active');
+            
+            // 添加选中动画效果
+            selectedNode.style.animation = 'nodeSelect 0.5s ease-out';
+            
+            // 更新内容面板
+            panels.forEach(panel => panel.classList.remove('active'));
+            const targetPanel = document.getElementById(`${algo}-content`);
+            targetPanel.classList.add('active');
+            
+            // 平滑滚动到内容面板
+            setTimeout(() => {
+                targetPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            
+            currentAlgorithm = algo;
+            
+            // 添加欢迎消息
+            addMessage('assistant', `你选择了${getAlgoName(algo)}算法！点击"开始游戏"按钮可以实战体验，或者问我问题。`);
+        }
+        
+        // 添加节点选中动画样式
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes nodeSelect {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.3); }
+                100% { transform: scale(1.2); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+        // 获取算法名称
+        function getAlgoName(algo) {
+            const names = {
+                'bfs': '广度优先搜索',
+                'dfs': '深度优先搜索',
+                'astar': 'A*',
+                'backtrack': '回溯法'
+            };
+            return names[algo] || algo;
+        }
+
+        // 跳转到游戏关卡选择页面
+        function playGame(gameType) {
+            console.log('=== 游戏跳转 ===');
+            console.log('gameType:', gameType);
+            
+            // 直接跳转到对应游戏的关卡选择页面
+            window.location.href = `/games/${gameType}`;
+        }
+
+        // 聊天功能
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            // 模拟AI回复
+            setTimeout(() => {
+                const response = getAIResponse(message);
+                addMessage('assistant', response);
+            }, 500);
+        }
+
+        function normalizeAlgorithmForAssistant(algo) {
+            if (algo === 'backtrack') return 'backtracking';
+            if (algo === 'astar') return 'astar';
+            return algo || 'general';
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const button = document.querySelector('.chat-input button');
+            const message = input.value.trim();
+
+            if (!message || button.disabled) return;
+
+            addMessage('user', message);
+            input.value = '';
+            input.focus();
+
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = '思考中';
+            const thinkingMessage = addMessage('assistant', '正在思考...');
+
+            try {
+                const response = await fetch('/api/assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: message,
+                        context: {
+                            page: 'learn',
+                            algorithm: normalizeAlgorithmForAssistant(currentAlgorithm),
+                            puzzle_type: 'algorithm_learning'
+                        }
+                    })
+                });
+                const data = await response.json();
+                let answer = data.response || data.answer || data.error || '学习助手暂时没有返回内容。';
+                if (data.source) {
+                    answer += `\n\n来源：${data.source === 'deepseek' ? 'DeepSeek API' : '本地知识库'}`;
+                }
+                thinkingMessage.querySelector('.message-content').textContent = answer;
+            } catch (error) {
+                thinkingMessage.querySelector('.message-content').textContent = '学习助手连接失败，请确认 Flask 服务已启动，并检查 API Key 配置。';
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        function addMessage(type, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = type === 'assistant' ? '🤖' : '👤';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+            
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getAIResponse(message) {
+            const responses = {
+                'bfs': 'BFS是广度优先搜索算法，使用队列实现，按层遍历，保证找到最短路径。',
+                'dfs': 'DFS是深度优先搜索算法，使用栈或递归实现，深入探索后回溯。',
+                'a*': 'A*是启发式搜索算法，结合了Dijkstra和贪心算法的优点，使用启发函数引导搜索。',
+                '回溯': '回溯法是一种试错策略，通过递归尝试所有可能，遇到障碍时回溯。',
+                '算法': '算法是解决问题的步骤集合，好的算法能高效地解决问题。',
+                '时间复杂度': '时间复杂度描述算法运行时间随输入规模增长的趋势，常见的有O(1), O(n), O(log n), O(n²)等。',
+                '空间复杂度': '空间复杂度描述算法所需内存空间随输入规模增长的趋势。'
+            };
+            
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (message.includes(keyword)) {
+                    return response;
+                }
+            }
+            
+            return `你问的是关于"${message}"的问题。我来帮你解答！${currentAlgorithm ? `当前正在学习${getAlgoName(currentAlgorithm)}，你可以问我关于这个算法的问题。` : '你可以先选择一个算法开始学习。'}`;
+        }
+
+        // 默认选中BFS
+        selectAlgorithm('bfs');
+    </script>
+</body>
+</html>

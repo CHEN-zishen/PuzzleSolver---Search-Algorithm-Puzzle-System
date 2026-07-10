@@ -1,0 +1,10 @@
+flask
+flask-cors
+numpy
+flask-sqlalchemy
+flask-bcrypt
+flask-login
+requests
+plotly
+pandas
+python-dotenv

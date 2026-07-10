@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏 - {{ level.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 
+                0 4px 15px rgba(102, 126, 234, 0.3),
+                0 0 0 0 rgba(102, 126, 234, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .home-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 8px 25px rgba(102, 126, 234, 0.4),
+                0 0 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .home-btn:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .home-icon {
+            font-size: 1.2rem;
+            animation: bounce 2s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .home-text {
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+
+        .home-text::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #fff, rgba(255,255,255,0.5));
+            border-radius: 1px;
+            transition: width 0.3s ease;
+        }
+
+        .home-btn:hover .home-text::after {
+            width: 100%;
+        }
+
+        .home-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .home-btn:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(-2deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-2px) rotate(2deg); }
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 70px);
+        }
+
+        /* 游戏区域 */
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .level-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .level-info p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .level-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .game-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 游戏网格 */
+        .game-grid {
+            display: grid;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .cell-wall {
+            background: rgba(100, 100, 100, 0.8);
+            border: 2px solid rgba(150, 150, 150, 0.5);
+            cursor: not-allowed;
+        }
+
+        .cell-path {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cell-path:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .cell-start {
+            background: rgba(74, 222, 128, 0.3);
+            border: 2px solid rgba(74, 222, 128, 0.5);
+        }
+
+        .cell-goal {
+            background: rgba(251, 191, 36, 0.3);
+            border: 2px solid rgba(251, 191, 36, 0.5);
+        }
+
+        .cell-current {
+            background: rgba(102, 126, 234, 0.5);
+            border: 2px solid rgba(102, 126, 234, 0.8);
+            animation: pulse 1s infinite;
+        }
+
+        .cell-visited {
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .cell-box {
+            background: rgba(139, 92, 246, 0.3);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* N皇后游戏样式 */
+        .nqueen-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 0;
+            min-height: 0;
+            aspect-ratio: 1;
+        }
+
+        .nqueen-light {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nqueen-dark {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .nqueen-cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .nqueen-queen {
+            font-size: 1.8rem;
+            animation: queenPulse 2s ease-in-out infinite;
+        }
+
+        .nqueen-conflict {
+            animation: conflictAlert 1s ease-in-out infinite;
+            background: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        @keyframes queenPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes conflictAlert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .cell-box:hover {
+            background: rgba(139, 92, 246, 0.5);
+            transform: scale(1.05);
+        }
+
+        .cell-target {
+            background: rgba(251, 191, 36, 0.2);
+            border: 2px dashed rgba(251, 191, 36, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cell-target:hover {
+            background: rgba(251, 191, 36, 0.4);
+        }
+
+        .cell-box.cell-target {
+            background: rgba(74, 222, 128, 0.4);
+            border: 2px solid rgba(74, 222, 128, 0.7);
+            cursor: pointer;
+        }
+
+        .cell-box.cell-target:hover {
+            background: rgba(74, 222, 128, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .select-container {
+            margin-bottom: 15px;
+        }
+
+        .select-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .select-container select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        .select-container select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .select-container select option {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        .instructions {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .instructions h4 {
+            color: white;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .status-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            min-height: 60px;
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .success-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .success-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .success-content p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .success-content .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .success-content .stats p {
+            margin-bottom: 5px;
+        }
+
+        .success-content .modal-footer {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .success-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .play-complete-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .play-complete-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 400px;
+        }
+
+        .play-complete-content h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .play-complete-content p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .play-complete-content .stats {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        /* 可拖动的AI助手 */
+        .ai-assistant {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: grab;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
+            transition: all 0.3s;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .ai-assistant:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .ai-assistant.dragging {
+            cursor: grabbing;
+            transform: scale(1.2);
+        }
+
+        .ai-assistant .pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.5);
+            animation: pulse 2s ease-out infinite;
+        }
+
+        .ai-assistant .icon {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* AI助手弹窗 */
+        .assistant-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .assistant-modal.active {
+            display: flex;
+        }
+
+        .assistant-window {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 500px;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .assistant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .assistant-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+
+        .assistant-header .close-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .assistant-header .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .assistant-chat {
+            height: 350px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .chat-message.user .chat-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chat-message.assistant .chat-avatar {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .chat-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 15px 15px 5px 15px;
+        }
+
+        .chat-message.assistant .chat-bubble {
+            background: rgba(118, 75, 162, 0.3);
+            border-radius: 15px 15px 15px 5px;
+        }
+
+        .assistant-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .assistant-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .assistant-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .assistant-input button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .assistant-input button:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .control-panel {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🧩 搜索算法解谜系统</h1>
+        <div class="nav-right">
+            <a href="/" class="home-btn">
+                <span class="home-icon">🏠</span>
+                <span class="home-text">返回首页</span>
+            </a>
+            <div class="user-info">
+                <span>👤 {{ current_user.username }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="game-area">
+            <div class="game-header">
+                <div class="level-info">
+                    <h2>{{ level.name }}</h2>
+                    <p>{{ level.description }}</p>
+                </div>
+                <div class="level-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="moves">0</div>
+                        <div class="stat-label">移动次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="time">00:00</div>
+                        <div class="stat-label">用时</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-container">
+                <div id="game-grid" class="game-grid"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="panel-section">
+                <div class="panel-title">🎮 游戏控制</div>
+                <div class="control-buttons">
+                    <button class="btn btn-primary" onclick="resetGame()">🔄 重新开始</button>
+                    <button class="btn btn-secondary" onclick="getHint()">💡 提示</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">🤖 算法求解</div>
+                <div class="select-container">
+                    <label>选择算法</label>
+                    <select id="algorithm">
+                        <option value="dfs">DFS - 深度优先搜索</option>
+                        <option value="bfs">BFS - 广度优先搜索</option>
+                        <option value="astar">A* - 启发式搜索</option>
+                        <option value="backtracking">回溯法</option>
+                    </select>
+                </div>
+                <div class="select-container">
+                    <label>播放速度</label>
+                    <select id="play-speed">
+                        <option value="1000">🐢 慢 (1秒/步)</option>
+                        <option value="500" selected>🐇 正常 (0.5秒/步)</option>
+                        <option value="200">⚡ 快 (0.2秒/步)</option>
+                        <option value="100">🚀 极快 (0.1秒/步)</option>
+                    </select>
+                </div>
+                <div class="control-buttons">
+                    <button class="btn btn-primary" id="solve-btn" onclick="solveWithAlgorithm()">⚡ 开始求解</button>
+                    <button class="btn btn-secondary" id="compare-btn" onclick="compareAlgorithms()">📊 对比策略</button>
+                    <button class="btn btn-secondary" id="play-btn" onclick="playAnimation()" disabled>▶️ 播放</button>
+                    <button class="btn btn-secondary" id="pause-btn" onclick="pauseAnimation()" disabled>⏸️ 暂停</button>
+                    <button class="btn btn-secondary" id="step-btn" onclick="stepAnimation()" disabled>⏭️ 单步</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">📝 操作说明</div>
+                <div class="instructions" id="instructions">
+                    <h4>手动操作：</h4>
+                    <ul>
+                        <li>使用方向键 ↑↓←→ 移动</li>
+                        <li>点击相邻格子进行移动</li>
+                        <li>找到从起点到终点的路径</li>
+                    </ul>
+                    <h4>算法求解：</h4>
+                    <ul>
+                        <li>选择算法后点击"开始求解"</li>
+                        <li>观看算法执行过程</li>
+                        <li>对比不同算法的效率</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">📊 状态信息</div>
+                <div class="status-display" id="status-display">
+                    点击"重新开始"开始游戏
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-modal" id="success-modal">
+        <div class="success-content">
+            <h2>🎉 恭喜过关！</h2>
+            <div class="stats">
+                <p>移动次数：<span id="final-moves">0</span></p>
+                <p>用时：<span id="final-time">00:00</span></p>
+                <p>使用算法：<span id="final-algo">-</span></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="goToNextLevel()">➡️ 下一关</button>
+                <button class="btn btn-secondary" onclick="resetGame()">🔄 重新开始</button>
+                <button class="btn btn-secondary" onclick="goToDashboard()">🏠 返回首页</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 播放完成弹窗 -->
+    <div class="play-complete-modal" id="play-complete-modal">
+        <div class="play-complete-content">
+            <h2>🎉 算法播放完成！</h2>
+            <div class="stats">
+                <p>算法求解已完成，共使用 <strong id="play-steps"></strong> 步</p>
+                <p>耗时：<strong id="play-time"></strong></p>
+                <p>使用算法：<strong id="play-algo"></strong></p>
+            </div>
+            <div class="success-buttons">
+                <button class="btn btn-primary" onclick="replayAnimation()">🔁 重新播放</button>
+                <button class="btn btn-secondary" onclick="backToOriginal()">📋 返回原始状态</button>
+                <button class="btn btn-secondary" onclick="stayAtCurrent()">✅ 停留在当前步骤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 可拖动的AI助手按钮 -->
+    <div class="ai-assistant" id="ai-assistant" onclick="toggleAssistant()">
+        <div class="pulse"></div>
+        <div class="icon">🤖</div>
+    </div>
+
+    <!-- AI助手弹窗 -->
+    <div class="assistant-modal" id="assistant-modal" onclick="closeAssistant()">
+        <div class="assistant-window" onclick="event.stopPropagation()">
+            <div class="assistant-header">
+                <h3>🤖 算法学习助手</h3>
+                <button class="close-btn" onclick="closeAssistant()">×</button>
+            </div>
+            <div class="assistant-chat" id="assistant-chat">
+                <div class="chat-message assistant">
+                    <div class="chat-avatar">🤖</div>
+                    <div class="chat-bubble">你好！我是算法学习助手，可以帮你解答游戏问题、提供策略建议。有什么我可以帮你的吗？</div>
+                </div>
+            </div>
+            <div class="assistant-input">
+                <input type="text" id="assistant-input" placeholder="输入你的问题..." onkeypress="if(event.key === 'Enter') sendAssistantMessage()">
+                <button onclick="sendAssistantMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const levelId = {{ level.id }};
+        const puzzleType = '{{ level.puzzle_type }}';
+        let puzzleData = null;
+        
+        // 安全地解析puzzle_data
+        try {
+            const rawPuzzleData = {{ (level.puzzle_data or 'null')|tojson }};
+            puzzleData = rawPuzzleData ? JSON.parse(rawPuzzleData) : null;
+        } catch (e) {
+            console.error('解析puzzle_data失败:', e);
+            puzzleData = null;
+        }
+        
+        console.log('=== 游戏初始化 ===');
+        console.log('levelId:', levelId);
+        console.log('puzzleType:', puzzleType);
+        console.log('puzzleData:', puzzleData);
+        console.log('puzzleData类型:', typeof puzzleData);
+        
+        let gameState = null;
+        let originalState = null;  // 保存关卡初始状态
+        let currentState = null;   // 保存使用算法前的状态
+        let moves = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let solvingResult = null;
+        let animationIndex = 0;
+        let animationInterval = null;
+        let isPlaying = false;
+        let moveHistory = [];
+
+        // 根据游戏类型更新操作说明
+        function updateInstructions() {
+            const instructions = document.getElementById('instructions');
+            if (!instructions) return;
+
+            const gameInstructions = {
+                maze: {
+                    manual: [
+                        '使用方向键 ↑↓←→ 移动',
+                        '点击相邻格子进行移动',
+                        '找到从起点到终点的路径'
+                    ],
+                    algorithm: [
+                        '选择算法后点击"开始求解"',
+                        '观看算法执行过程',
+                        '对比不同算法的效率'
+                    ]
+                },
+                eight_puzzle: {
+                    manual: [
+                        '使用方向键 ↑↓←→ 移动方块',
+                        '点击空格相邻的方块进行移动',
+                        '将数字按顺序排列成正确位置'
+                    ],
+                    algorithm: [
+                        '选择算法后点击"开始求解"',
+                        '观看算法自动求解过程',
+                        'A*算法保证找到最优解'
+                    ]
+                },
+                nqueen: {
+                    manual: [
+                        '点击棋盘格子放置皇后',
+                        '再次点击可移除皇后',
+                        '确保所有皇后互不攻击'
+                    ],
+                    algorithm: [
+                        '选择回溯算法后点击"开始求解"',
+                        '观看回溯算法搜索过程',
+                        '了解回溯算法的剪枝策略'
+                    ]
+                },
+                sudoku: {
+                    manual: [
+                        '点击空格选中后输入数字',
+                        '使用键盘数字键1-9填入数字',
+                        '每行、每列、每个宫格数字不重复'
+                    ],
+                    algorithm: [
+                        '选择算法后点击"开始求解"',
+                        '观看数独自动求解过程',
+                        '学习约束满足问题求解'
+                    ]
+                },
+                sokoban: {
+                    manual: [
+                        '使用方向键 ↑↓←→ 移动',
+                        '点击相邻格子进行移动',
+                        '将所有箱子推到目标位置'
+                    ],
+                    algorithm: [
+                        '选择算法后点击"开始求解"',
+                        '观看算法执行过程',
+                        '对比不同算法的效率'
+                    ]
+                }
+            };
+
+            const current = gameInstructions[puzzleType] || gameInstructions.maze;
+            
+            instructions.innerHTML = `
+                <h4>手动操作：</h4>
+                <ul>
+                    ${current.manual.map(li => `<li>${li}</li>`).join('')}
+                </ul>
+                <h4>算法求解：</h4>
+                <ul>
+                    ${current.algorithm.map(li => `<li>${li}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        // 初始化游戏
+        function initGame() {
+            console.log('=== 初始化游戏 ===');
+            console.log('puzzleType:', puzzleType);
+            console.log('puzzleData:', puzzleData);
+            console.log('puzzleData类型:', typeof puzzleData);
+            
+            // 更新操作说明
+            updateInstructions();
+            
+            // 专门处理N皇后游戏
+            if (puzzleType === 'nqueen') {
+                initNQueenGame();
+                return;
+            }
+            
+            // 解析puzzle_data
+            if (puzzleData && typeof puzzleData === 'string') {
+                try {
+                    puzzleData = JSON.parse(puzzleData);
+                    console.log('解析后puzzleData:', puzzleData);
+                } catch (e) {
+                    console.error('解析puzzle_data失败:', e);
+                    puzzleData = null;
+                }
+            }
+
+            if (puzzleData) {
+                gameState = JSON.parse(JSON.stringify(puzzleData));
+                originalState = JSON.parse(JSON.stringify(puzzleData));
+            } else {
+                console.log('puzzleData为空，尝试生成谜题...');
+                generatePuzzle();
+                return; // 生成谜题后会调用renderGame
+            }
+            
+            console.log('准备渲染游戏...');
+            renderGame();
+            updateStatus('游戏已开始');
+        }
+        
+        // 初始化N皇后游戏
+        function initNQueenGame() {
+            console.log('=== 初始化N皇后游戏 ===');
+            
+            let boardSize = 8; // 默认8皇后
+            
+            // 尝试从puzzleData获取棋盘大小
+            if (puzzleData) {
+                if (Array.isArray(puzzleData)) {
+                    boardSize = puzzleData.length;
+                    gameState = JSON.parse(JSON.stringify(puzzleData));
+                    console.log('从数组获取棋盘大小:', boardSize);
+                } else if (typeof puzzleData === 'object' && puzzleData.n) {
+                    boardSize = puzzleData.n;
+                    gameState = Array(boardSize).fill(-1);
+                    console.log('从对象获取棋盘大小:', boardSize);
+                } else if (typeof puzzleData === 'string') {
+                    try {
+                        const parsed = JSON.parse(puzzleData);
+                        if (Array.isArray(parsed)) {
+                            boardSize = parsed.length;
+                            gameState = parsed;
+                        } else if (parsed.n) {
+                            boardSize = parsed.n;
+                            gameState = Array(boardSize).fill(-1);
+                        }
+                    } catch (e) {
+                        console.error('解析puzzleData失败:', e);
+                    }
+                }
+            }
+            
+            // 如果gameState仍未初始化，使用默认值
+            if (!gameState || !Array.isArray(gameState)) {
+                gameState = Array(boardSize).fill(-1);
+            }
+            
+            originalState = JSON.parse(JSON.stringify(gameState));
+            console.log('N皇后棋盘大小:', boardSize + 'x' + boardSize);
+            console.log('gameState:', gameState);
+            
+            renderNQueenGame();
+            updateStatus(`游戏已开始！在${boardSize}x${boardSize}棋盘上放置${boardSize}个皇后`);
+        }
+
+        // 生成谜题
+        async function generatePuzzle() {
+            try {
+                const response = await fetch('/api/generate_puzzle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        puzzle_type: puzzleType,
+                        difficulty: '{{ level.difficulty }}'
+                    })
+                });
+                const data = await response.json();
+                gameState = data.puzzle;
+                renderGame();
+            } catch (error) {
+                updateStatus('生成谜题失败');
+            }
+        }
+
+        // 渲染游戏
+        function renderGame() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+
+            if (puzzleType === 'maze') {
+                renderMaze(grid);
+            } else if (puzzleType === 'sokoban') {
+                renderSokoban(grid);
+            } else if (puzzleType === 'puzzle') {
+                renderSlidingPuzzle(grid);
+            } else if (puzzleType === 'eight_puzzle') {
+                renderEightPuzzle(grid);
+            } else if (puzzleType === 'nqueen') {
+                renderNQueen(grid);
+            } else if (puzzleType === 'sudoku') {
+                renderSudoku(grid);
+            }
+        }
+
+        // 渲染迷宫
+        function renderMaze(grid) {
+            const rows = gameState.length;
+            const cols = gameState[0].length;
+            grid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    if (gameState[i][j] === 1) {
+                        cell.classList.add('cell-wall');
+                    } else if (gameState[i][j] === 2) {
+                        cell.classList.add('cell-start', 'cell-current');
+                        cell.textContent = '🚶';
+                    } else if (gameState[i][j] === 3) {
+                        cell.classList.add('cell-goal');
+                        cell.textContent = '🏁';
+                    } else if (gameState[i][j] === 4) {
+                        // 路径标记
+                        cell.classList.add('cell-visited');
+                        cell.textContent = '✨';
+                    } else {
+                        cell.classList.add('cell-path');
+                        cell.onclick = () => movePlayer(i, j);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 渲染推箱子
+        function renderSokoban(grid) {
+            const rows = gameState.length;
+            const cols = gameState[0].length;
+            grid.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    const value = gameState[i][j];
+                    
+                    // 墙壁
+                    if (value === 1) {
+                        cell.classList.add('cell-wall');
+                    } 
+                    // 玩家
+                    else if (value === 2) {
+                        cell.classList.add('cell-start', 'cell-current');
+                        cell.textContent = '🚶';
+                    } 
+                    // 目标位置
+                    else if (value === 3) {
+                        cell.classList.add('cell-target');
+                        cell.textContent = '⭐';
+                        cell.onclick = () => moveToCell(i, j);
+                    } 
+                    // 箱子
+                    else if (value === 4) {
+                        cell.classList.add('cell-box');
+                        cell.textContent = '📦';
+                        cell.onclick = () => moveToCell(i, j);
+                    } 
+                    // 玩家在目标上
+                    else if (value === 5) {
+                        cell.classList.add('cell-start', 'cell-current', 'cell-target');
+                        cell.textContent = '🚶';
+                    } 
+                    // 箱子在目标上
+                    else if (value === 6) {
+                        cell.classList.add('cell-box', 'cell-target');
+                        cell.textContent = '✅';
+                        cell.onclick = () => moveToCell(i, j);
+                    } 
+                    // 空地
+                    else {
+                        cell.classList.add('cell-path');
+                        cell.onclick = () => moveToCell(i, j);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 点击移动到指定格子（推箱子）
+        function moveToCell(targetRow, targetCol) {
+            const [playerRow, playerCol] = findSokobanPlayer();
+            
+            // 只能移动到相邻格子
+            const rowDiff = Math.abs(targetRow - playerRow);
+            const colDiff = Math.abs(targetCol - playerCol);
+            
+            if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+                moveSokobanPlayer(targetRow, targetCol);
+            } else {
+                updateStatus('只能移动到相邻的格子！');
+            }
+        }
+
+        // 渲染拼图
+        function renderSlidingPuzzle(grid) {
+            // 处理一维数组的情况
+            let puzzleState = gameState;
+            if (Array.isArray(gameState) && gameState.length > 0 && !Array.isArray(gameState[0])) {
+                // 一维数组，转换为二维
+                const size = Math.sqrt(gameState.length);
+                puzzleState = [];
+                for (let i = 0; i < size; i++) {
+                    puzzleState.push(gameState.slice(i * size, (i + 1) * size));
+                }
+            }
+
+            const size = puzzleState.length;
+            grid.style.gridTemplateColumns = `repeat(${size}, 60px)`;
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (puzzleState[i][j] === 0) {
+                        cell.classList.add('cell-path');
+                    } else {
+                        cell.classList.add('cell-visited');
+                        cell.textContent = puzzleState[i][j];
+                        cell.onclick = () => moveTile(i, j);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 渲染八数码
+        function renderEightPuzzle(grid) {
+            grid.style.gridTemplateColumns = 'repeat(3, 50px)';
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (gameState[i][j] === 0) {
+                        cell.classList.add('cell-path');
+                    } else {
+                        cell.classList.add('cell-visited');
+                        cell.textContent = gameState[i][j];
+                        cell.onclick = () => moveTile(i, j);
+                    }
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 渲染N皇后游戏
+        function renderNQueenGame() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+            
+            const size = gameState.length;
+            console.log('渲染N皇后棋盘:', size + 'x' + size);
+            
+            // 设置网格样式
+            const container = document.querySelector('.game-container');
+            const availableWidth = Math.max(260, (container ? container.clientWidth : 520) - 90);
+            const availableHeight = Math.max(260, window.innerHeight - 260);
+            const boardLimit = Math.min(480, availableWidth, availableHeight);
+            const cellSize = Math.max(32, Math.floor(boardLimit / size)); // 根据棋盘大小调整格子尺寸
+            grid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+            grid.style.gridTemplateRows = `repeat(${size}, ${cellSize}px)`;
+            grid.style.width = 'max-content';
+            grid.style.height = 'max-content';
+            grid.style.margin = '0 auto';
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'nqueen-cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.style.width = `${cellSize}px`;
+                    cell.style.height = `${cellSize}px`;
+                    cell.style.fontSize = `${Math.max(20, Math.floor(cellSize * 0.5))}px`;
+                    
+                    // 棋盘格子颜色交替
+                    if ((i + j) % 2 === 0) {
+                        cell.classList.add('nqueen-light');
+                    } else {
+                        cell.classList.add('nqueen-dark');
+                    }
+                    
+                    // 如果这一行有皇后，显示皇后
+                    if (gameState[i] === j) {
+                        cell.textContent = '👑';
+                        cell.classList.add('nqueen-queen');
+                        
+                        // 标记冲突的皇后
+                        if (hasConflictAt(i, j)) {
+                            cell.classList.add('nqueen-conflict');
+                        }
+                    }
+                    
+                    // 添加点击事件
+                    cell.onclick = () => handleNQueenClick(i, j);
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+        
+        // 处理N皇后点击
+        function handleNQueenClick(row, col) {
+            if (!startTime) {
+                startTimer();
+            }
+            
+            // 保存历史状态用于撤销
+            moveHistory.push(JSON.parse(JSON.stringify(gameState)));
+            
+            // 如果点击的位置已经有皇后，移除它
+            if (gameState[row] === col) {
+                gameState[row] = -1;
+            } else {
+                // 放置皇后到该位置
+                gameState[row] = col;
+            }
+            
+            moves++;
+            updateStats();
+            renderNQueenGame();
+            
+            // 检查游戏状态
+            checkNQueenWin();
+        }
+        
+        // 检查指定位置是否有冲突
+        function hasConflictAt(row, col) {
+            for (let i = 0; i < gameState.length; i++) {
+                if (i !== row && gameState[i] !== -1) {
+                    // 检查列冲突或对角线冲突
+                    if (gameState[i] === col || 
+                        Math.abs(gameState[i] - col) === Math.abs(i - row)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // 检查N皇后是否获胜
+        function checkNQueenWin() {
+            const size = gameState.length;
+            
+            // 检查是否所有皇后都已放置
+            for (let i = 0; i < size; i++) {
+                if (gameState[i] === -1) {
+                    updateStatus(`已放置 ${size - gameState.filter(x => x === -1).length}/${size} 个皇后`);
+                    return;
+                }
+            }
+            
+            // 检查是否有冲突
+            for (let i = 0; i < size; i++) {
+                if (hasConflictAt(i, gameState[i])) {
+                    updateStatus('⚠️ 存在冲突！请调整皇后位置');
+                    return;
+                }
+            }
+            
+            // 胜利！
+            updateStatus('恭喜，所有皇后都已安全放置！');
+            winGame();
+        }
+        
+        // 渲染N皇后（旧版本，保留用于兼容）
+        function renderNQueen(grid) {
+            renderNQueenGame();
+        }
+
+        // 渲染数独
+        function renderSudoku(grid) {
+            grid.style.gridTemplateColumns = 'repeat(9, 50px)';
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    if ((j + 1) % 3 === 0 && j !== 8) cell.style.borderRight = '2px solid rgba(255,255,255,0.3)';
+                    if ((i + 1) % 3 === 0 && i !== 8) cell.style.borderBottom = '2px solid rgba(255,255,255,0.3)';
+
+                    if (gameState[i][j] !== 0) {
+                        cell.classList.add('cell-visited');
+                        cell.textContent = gameState[i][j];
+                    } else {
+                        cell.classList.add('cell-path');
+                        cell.onclick = () => inputNumber(i, j);
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 移动玩家（迷宫）
+        function movePlayer(targetRow, targetCol) {
+            if (!startTime) {
+                startTimer();
+            }
+
+            const currentPos = findPlayer();
+            const [currentRow, currentCol] = currentPos;
+
+            if (
+                targetRow < 0 ||
+                targetRow >= gameState.length ||
+                targetCol < 0 ||
+                targetCol >= gameState[0].length
+            ) {
+                updateStatus('已经到迷宫边界了，不能继续往外走。');
+                return;
+            }
+
+            // 检查是否相邻
+            const isAdjacent = Math.abs(targetRow - currentRow) + Math.abs(targetCol - currentCol) === 1;
+            if (!isAdjacent) {
+                updateStatus('只能移动到相邻的格子！');
+                return;
+            }
+
+            // 检查是否可以移动
+            if (gameState[targetRow][targetCol] === 1) {
+                updateStatus('这是墙壁，无法通过！');
+                return;
+            }
+
+            // 在移动之前检查是否到达目标
+            const isGoal = gameState[targetRow][targetCol] === 3;
+
+            // 移动
+            gameState[currentRow][currentCol] = 0;
+            gameState[targetRow][targetCol] = 2;
+            moves++;
+            updateStats();
+            renderGame();
+
+            // 检查是否到达目标
+            if (isGoal) {
+                winGame();
+            }
+        }
+
+        // 查找玩家位置（推箱子）
+        function findSokobanPlayer() {
+            for (let i = 0; i < gameState.length; i++) {
+                for (let j = 0; j < gameState[i].length; j++) {
+                    if (gameState[i][j] === 2 || gameState[i][j] === 5) {
+                        return [i, j];
+                    }
+                }
+            }
+            return [-1, -1];
+        }
+
+        // 移动玩家（推箱子）
+        function moveSokobanPlayer(newRow, newCol) {
+            if (!startTime) {
+                startTimer();
+            }
+
+            const [playerRow, playerCol] = findSokobanPlayer();
+            
+            // 检查边界
+            if (newRow < 0 || newRow >= gameState.length || newCol < 0 || newCol >= gameState[0].length) {
+                return false;
+            }
+
+            const targetCell = gameState[newRow][newCol];
+            
+            // 碰到墙壁，不能移动
+            if (targetCell === 1) {
+                updateStatus('前面是墙壁，不能移动！');
+                return false;
+            }
+
+            // 碰到箱子
+            if (targetCell === 4 || targetCell === 6) {
+                // 计算箱子后面的位置
+                const boxRow = newRow + (newRow - playerRow);
+                const boxCol = newCol + (newCol - playerCol);
+                
+                // 检查箱子后面是否可移动
+                if (boxRow < 0 || boxRow >= gameState.length || boxCol < 0 || boxCol >= gameState[0].length) {
+                    updateStatus('箱子推不动！');
+                    return false;
+                }
+                
+                const boxTargetCell = gameState[boxRow][boxCol];
+                
+                // 箱子后面是墙壁或另一个箱子，不能推动
+                if (boxTargetCell === 1 || boxTargetCell === 4 || boxTargetCell === 6) {
+                    updateStatus('箱子推不动！');
+                    return false;
+                }
+                
+                // 推动箱子
+                // 移动箱子
+                if (boxTargetCell === 3) {
+                    // 箱子推到目标位置
+                    gameState[boxRow][boxCol] = 6; // 箱子在目标上
+                } else {
+                    // 箱子推到空地
+                    gameState[boxRow][boxCol] = 4; // 箱子
+                }
+                
+                // 移动玩家到原箱子位置
+                if (targetCell === 6) {
+                    // 从目标上的箱子移走
+                    gameState[newRow][newCol] = 5; // 玩家在目标上
+                } else {
+                    // 从普通箱子移走
+                    gameState[newRow][newCol] = 2; // 玩家
+                }
+                
+                // 清除原玩家位置
+                if (gameState[playerRow][playerCol] === 5) {
+                    // 玩家从目标位置离开
+                    gameState[playerRow][playerCol] = 3; // 恢复目标
+                } else {
+                    // 玩家从普通位置离开
+                    gameState[playerRow][playerCol] = 0; // 空地
+                }
+                
+                moves++;
+                updateStats();
+                renderGame();
+                checkWin();
+                updateStatus('推动箱子成功！');
+                return true;
+            }
+            
+            // 移动到空地或目标位置
+            if (targetCell === 0 || targetCell === 3) {
+                // 移动玩家
+                if (targetCell === 3) {
+                    // 移动到目标位置
+                    gameState[newRow][newCol] = 5; // 玩家在目标上
+                } else {
+                    // 移动到空地
+                    gameState[newRow][newCol] = 2; // 玩家
+                }
+                
+                // 清除原玩家位置
+                if (gameState[playerRow][playerCol] === 5) {
+                    // 玩家从目标位置离开
+                    gameState[playerRow][playerCol] = 3; // 恢复目标
+                } else {
+                    // 玩家从普通位置离开
+                    gameState[playerRow][playerCol] = 0; // 空地
+                }
+                
+                moves++;
+                updateStats();
+                renderGame();
+                checkWin();
+                updateStatus('移动成功！');
+                return true;
+            }
+            
+            return false;
+        }
+
+        // 移动方块（拼图）
+        function moveTile(row, col) {
+            if (!startTime) {
+                startTimer();
+            }
+
+            // 处理一维数组的情况
+            let puzzleState = gameState;
+            let isOneDimensional = false;
+            
+            if (Array.isArray(gameState) && gameState.length > 0 && !Array.isArray(gameState[0])) {
+                // 一维数组，转换为二维
+                const size = Math.sqrt(gameState.length);
+                puzzleState = [];
+                for (let i = 0; i < size; i++) {
+                    puzzleState.push(gameState.slice(i * size, (i + 1) * size));
+                }
+                isOneDimensional = true;
+            }
+
+            const size = puzzleState.length;
+            const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+
+                if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+                    if (puzzleState[newRow][newCol] === 0) {
+                        // 交换
+                        puzzleState[newRow][newCol] = puzzleState[row][col];
+                        puzzleState[row][col] = 0;
+                        
+                        // 如果是一维数组，转换回去
+                        if (isOneDimensional) {
+                            gameState = puzzleState.flat();
+                        } else {
+                            gameState = puzzleState;
+                        }
+                        
+                        moves++;
+                        updateStats();
+                        renderGame();
+                        checkWin();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // N皇后游戏已使用新的实现（handleNQueenClick）
+
+        // 输入数字（数独）
+        function inputNumber(row, col) {
+            if (!startTime) {
+                startTimer();
+            }
+
+            const num = prompt('输入数字 (1-9):');
+            if (num && num >= 1 && num <= 9) {
+                gameState[row][col] = parseInt(num);
+                moves++;
+                updateStats();
+                renderGame();
+                checkWin();
+            }
+        }
+
+        // 查找玩家位置
+        function findPlayer() {
+            for (let i = 0; i < gameState.length; i++) {
+                for (let j = 0; j < gameState[i].length; j++) {
+                    if (gameState[i][j] === 2) {
+                        return [i, j];
+                    }
+                }
+            }
+            return [0, 0];
+        }
+
+        // 查找目标位置
+        function findGoal() {
+            for (let i = 0; i < gameState.length; i++) {
+                for (let j = 0; j < gameState[i].length; j++) {
+                    if (gameState[i][j] === 3) {
+                        return [i, j];
+                    }
+                }
+            }
+            return [-1, -1];
+        }
+
+        // 检查胜利
+        function checkWin() {
+            let won = false;
+
+            if (puzzleType === 'puzzle' || puzzleType === 'eight_puzzle') {
+                // 检查拼图是否完成
+                let puzzleState = gameState;
+                
+                // 处理一维数组的情况
+                if (Array.isArray(gameState) && gameState.length > 0 && !Array.isArray(gameState[0])) {
+                    // 一维数组，检查是否是正确顺序
+                    for (let i = 0; i < gameState.length - 1; i++) {
+                        if (gameState[i] !== i + 1) return;
+                    }
+                    if (gameState[gameState.length - 1] !== 0) return;
+                } else {
+                    // 二维数组
+                    let expected = 1;
+                    for (let i = 0; i < gameState.length; i++) {
+                        for (let j = 0; j < gameState[i].length; j++) {
+                            if (i === gameState.length - 1 && j === gameState[i].length - 1) {
+                                if (gameState[i][j] !== 0) return;
+                            } else {
+                                if (gameState[i][j] !== expected) return;
+                                expected++;
+                            }
+                        }
+                    }
+                }
+                won = true;
+            } else if (puzzleType === 'nqueen') {
+                // 检查N皇后是否完成（所有皇后都放置且没有冲突）
+                for (let i = 0; i < gameState.length; i++) {
+                    if (gameState[i] === -1) return;
+                }
+                // 检查是否有冲突
+                for (let i = 0; i < gameState.length; i++) {
+                    for (let j = i + 1; j < gameState.length; j++) {
+                        if (gameState[i] === gameState[j] || 
+                            Math.abs(gameState[i] - gameState[j]) === Math.abs(i - j)) {
+                            return; // 有冲突，不算胜利
+                        }
+                    }
+                }
+                won = true;
+            } else if (puzzleType === 'sudoku') {
+                // 检查数独是否完成
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        if (gameState[i][j] === 0) return;
+                    }
+                }
+                won = true;
+            } else if (puzzleType === 'sokoban') {
+                let hasAnyBox = false;
+                // 检查推箱子是否完成（所有箱子都在目标位置）
+                for (let i = 0; i < gameState.length; i++) {
+                    for (let j = 0; j < gameState[i].length; j++) {
+                        if (puzzleType === 'sokoban' && (gameState[i][j] === 4 || gameState[i][j] === 6)) {
+                            hasAnyBox = true;
+                        }
+                        // 如果还有箱子不在目标位置，游戏未完成
+                        if (gameState[i][j] === 4) return; // 普通箱子
+                    }
+                }
+                if (!hasAnyBox) {
+                    updateStatus('当前推箱子地图没有箱子，请重新开始或切换关卡。');
+                    return;
+                }
+                won = true;
+            }
+
+            if (won) {
+                winGame();
+            }
+        }
+
+        // 胜利
+        function winGame() {
+            stopTimer();
+            document.getElementById('final-moves').textContent = moves;
+            document.getElementById('final-time').textContent = document.getElementById('time').textContent;
+            document.getElementById('final-algo').textContent = '手动操作';
+            document.getElementById('success-modal').style.display = 'flex';
+            
+            // 标记关卡完成
+            fetch('/api/complete_level', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    level_id: levelId,
+                    algorithm: 'manual',
+                    steps: moves,
+                    time_taken: getElapsedTime()
+                })
+            });
+        }
+
+        // 算法求解
+        async function solveWithAlgorithm() {
+            const algorithm = document.getElementById('algorithm').value;
+            document.getElementById('solve-btn').disabled = true;
+            updateStatus('正在求解...');
+
+            // 保存当前游戏状态，以便用户可以返回
+            if (puzzleType === 'maze') {
+                // 迷宫保存玩家位置
+                const playerPos = findPlayer();
+                currentState = { playerPos: playerPos, gridBackup: JSON.parse(JSON.stringify(gameState)) };
+            } else {
+                currentState = JSON.parse(JSON.stringify(gameState));
+            }
+
+            try {
+                const requestData = {
+                    puzzle_type: puzzleType,
+                    algorithm: algorithm,
+                    input_data: gameState,
+                    level_id: levelId
+                };
+                
+                // 如果是迷宫游戏，发送玩家当前位置作为起点
+                if (puzzleType === 'maze') {
+                    const playerPos = findPlayer();
+                    requestData.start_position = playerPos;
+                }
+                
+                const response = await fetch('/api/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                solvingResult = await response.json();
+
+                if (solvingResult.success) {
+                    updateStatus(`求解成功！找到 ${solvingResult.steps.length} 步解决方案`);
+                    document.getElementById('play-btn').disabled = false;
+                    document.getElementById('step-btn').disabled = false;
+                    animationIndex = 0;
+                } else {
+                    updateStatus('未找到解决方案！');
+                    document.getElementById('solve-btn').disabled = false;
+                }
+            } catch (error) {
+                updateStatus('求解失败！');
+                document.getElementById('solve-btn').disabled = false;
+            }
+        }
+
+        function getComparisonAlgorithms() {
+            const map = {
+                maze: ['dfs', 'bfs', 'astar', 'backtracking'],
+                eight_puzzle: ['bfs', 'astar'],
+                puzzle: ['bfs', 'astar'],
+                nqueen: ['dfs', 'backtracking'],
+                sudoku: ['dfs', 'backtracking'],
+                sokoban: ['bfs', 'astar']
+            };
+            return map[puzzleType] || ['bfs', 'astar'];
+        }
+
+        function renderComparisonTable(comparisons) {
+            const names = {
+                dfs: 'DFS',
+                bfs: 'BFS',
+                astar: 'A*',
+                backtracking: '回溯'
+            };
+            const rows = comparisons.map(item => `
+                <tr>
+                    <td>${names[item.algorithm] || item.algorithm}</td>
+                    <td>${item.success ? '成功' : '失败'}</td>
+                    <td>${item.path_length || '-'}</td>
+                    <td>${item.steps_count || 0}</td>
+                    <td>${item.visited_count ?? item.pruned_count ?? '-'}</td>
+                    <td>${item.time_taken}s</td>
+                </tr>
+            `).join('');
+            document.getElementById('status-display').innerHTML = `
+                <div style="font-weight:700;margin-bottom:8px;color:white;">搜索策略对比</div>
+                <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">算法</th>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">结果</th>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">路径</th>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">步骤</th>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">扩展/剪枝</th>
+                            <th style="text-align:left;padding:4px;border-bottom:1px solid rgba(255,255,255,.2);">耗时</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function describeAlgorithmStep(step, index, total) {
+            const actionNames = {
+                start: '初始化',
+                visit: '访问状态',
+                enqueue: '加入队列',
+                expand: '扩展状态',
+                place: '尝试放置',
+                backtrack: '失败回退',
+                prune: '剪枝',
+                prune_cycle: '剪枝：避免环路',
+                goal_found: '找到目标'
+            };
+            const parts = [`步骤 ${index}/${total}`, actionNames[step.action] || step.action || '状态变化'];
+            if (step.visited_count !== undefined) parts.push(`已访问 ${step.visited_count}`);
+            if (step.queue_size !== undefined) parts.push(`队列 ${step.queue_size}`);
+            if (step.path_length !== undefined) parts.push(`路径长 ${step.path_length}`);
+            if (step.pruned_count !== undefined) parts.push(`剪枝 ${step.pruned_count}`);
+            if (step.f !== undefined) parts.push(`f=${step.f}, g=${step.g}, h=${step.h}`);
+            return parts.join(' | ');
+        }
+
+        function updateAlgorithmStepStatus(step, index, total) {
+            updateStatus(describeAlgorithmStep(step, index, total));
+        }
+
+        async function compareAlgorithms() {
+            const compareBtn = document.getElementById('compare-btn');
+            compareBtn.disabled = true;
+            updateStatus('正在对比不同搜索策略...');
+
+            const requestData = {
+                puzzle_type: puzzleType,
+                input_data: gameState,
+                algorithms: getComparisonAlgorithms()
+            };
+            if (puzzleType === 'maze') {
+                requestData.start_position = findPlayer();
+            }
+
+            try {
+                const response = await fetch('/api/compare_algorithms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+                const result = await response.json();
+                if (!response.ok || result.error) {
+                    updateStatus(result.error || '算法对比失败');
+                    return;
+                }
+                renderComparisonTable(result.comparisons);
+            } catch (error) {
+                updateStatus('算法对比失败，请检查当前关卡状态。');
+            } finally {
+                compareBtn.disabled = false;
+            }
+        }
+
+        // 播放动画
+        function playAnimation() {
+            if (!solvingResult || !solvingResult.success) return;
+
+            isPlaying = true;
+            document.getElementById('play-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('step-btn').disabled = true;
+
+            // 获取播放速度
+            const speed = parseInt(document.getElementById('play-speed').value);
+
+            animationInterval = setInterval(() => {
+                if (animationIndex >= solvingResult.steps.length) {
+                    pauseAnimation();
+                    showPlayComplete();
+                    return;
+                }
+
+                const step = solvingResult.steps[animationIndex];
+                applyStep(step);
+                animationIndex++;
+                updateAlgorithmStepStatus(step, animationIndex, solvingResult.steps.length);
+            }, speed);
+        }
+
+        // 暂停动画
+        function pauseAnimation() {
+            isPlaying = false;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            document.getElementById('play-btn').disabled = false;
+            document.getElementById('pause-btn').disabled = true;
+            document.getElementById('step-btn').disabled = false;
+        }
+
+        // 单步动画
+        function stepAnimation() {
+            if (!solvingResult || !solvingResult.success) return;
+            if (animationIndex >= solvingResult.steps.length) return;
+
+            const step = solvingResult.steps[animationIndex];
+            applyStep(step);
+            animationIndex++;
+            updateAlgorithmStepStatus(step, animationIndex, solvingResult.steps.length);
+        }
+
+        // 应用步骤
+        function applyStep(step) {
+            // 根据步骤更新游戏状态
+            if (puzzleType === 'maze') {
+                // 迷宫：step.state是坐标元组 (row, col)
+                // 需要更新grid来显示路径
+                if (step.state && Array.isArray(step.state) && step.state.length === 2) {
+                    const [row, col] = step.state;
+                    // 将当前位置标记为路径
+                    if (gameState[row][col] !== 2 && gameState[row][col] !== 3) {
+                        gameState[row][col] = 4; // 4表示路径
+                    }
+                    renderGame();
+                }
+            } else if (step.state) {
+                // 其他游戏：直接使用步骤状态
+                gameState = step.state;
+                renderGame();
+            }
+        }
+
+        // 显示播放完成弹窗
+        function showPlayComplete() {
+            document.getElementById('play-steps').textContent = solvingResult.steps.length;
+            document.getElementById('play-time').textContent = solvingResult.time_taken.toFixed(2) + 's';
+            document.getElementById('play-algo').textContent = document.getElementById('algorithm').value.toUpperCase();
+            document.getElementById('play-complete-modal').style.display = 'flex';
+            
+            // 标记关卡完成
+            fetch('/api/complete_level', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    level_id: levelId,
+                    algorithm: document.getElementById('algorithm').value,
+                    steps: solvingResult.steps.length,
+                    time_taken: solvingResult.time_taken
+                })
+            });
+        }
+
+        // 重新播放动画
+        function replayAnimation() {
+            document.getElementById('play-complete-modal').style.display = 'none';
+            animationIndex = 0;
+            
+            if (puzzleType === 'maze' && currentState && currentState.gridBackup) {
+                // 迷宫：恢复grid备份
+                gameState = JSON.parse(JSON.stringify(currentState.gridBackup));
+            } else {
+                gameState = JSON.parse(JSON.stringify(currentState));
+            }
+            
+            renderGame();
+            playAnimation();
+        }
+
+        // 返回使用算法前的状态
+        function backToOriginal() {
+            document.getElementById('play-complete-modal').style.display = 'none';
+            
+            if (puzzleType === 'maze' && currentState && currentState.gridBackup) {
+                // 迷宫：恢复grid备份和玩家位置
+                gameState = JSON.parse(JSON.stringify(currentState.gridBackup));
+            } else {
+                // 其他游戏：直接恢复状态
+                gameState = JSON.parse(JSON.stringify(currentState));
+            }
+            
+            renderGame();
+            updateStatus('已返回使用算法前的状态，可以继续游戏');
+        }
+
+        // 停留在当前步骤
+        function stayAtCurrent() {
+            document.getElementById('play-complete-modal').style.display = 'none';
+            updateStatus('停留在完成状态，可以开始下一关或重新开始');
+        }
+
+        // 重置游戏
+        function resetGame() {
+            moves = 0;
+            stopTimer();
+            startTime = null;
+            solvingResult = null;
+            animationIndex = 0;
+            isPlaying = false;
+            moveHistory = [];
+            
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+
+            document.getElementById('solve-btn').disabled = false;
+            document.getElementById('play-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = true;
+            document.getElementById('step-btn').disabled = true;
+            document.getElementById('success-modal').style.display = 'none';
+            document.getElementById('play-complete-modal').style.display = 'none';
+
+            initGame();
+            updateStats();
+        }
+
+        // 获取提示
+        function getHint() {
+            const hints = {
+                'maze': '尝试使用BFS算法找到最短路径',
+                'sokoban': '先把箱子推到目标附近，注意不要推到死角',
+                'puzzle': '使用A*算法可以高效解决拼图问题',
+                'eight_puzzle': '观察数字的排列规律，逐步调整',
+                'nqueen': '每行只能放一个皇后，注意对角线冲突',
+                'sudoku': '先填确定的数字，再逐步推导'
+            };
+            updateStatus(hints[puzzleType] || '继续努力！');
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('moves').textContent = moves;
+        }
+
+        // 更新状态
+        function updateStatus(message) {
+            document.getElementById('status-display').textContent = message;
+        }
+
+        // 开始计时
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // 停止计时
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // 更新计时器
+        function updateTimer() {
+            const elapsed = getElapsedTime();
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('time').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 获取经过时间
+        function getElapsedTime() {
+            if (!startTime) return 0;
+            return Math.floor((Date.now() - startTime) / 1000);
+        }
+
+        // 下一关
+        async function goToNextLevel() {
+            try {
+                const response = await fetch(`/api/level/${levelId + 1}`);
+                if (response.ok) {
+                    window.location.href = `/level/${levelId + 1}`;
+                } else {
+                    alert('恭喜！你已经完成了所有关卡！');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                alert('恭喜！你已经完成了所有关卡！');
+                window.location.href = '/';
+            }
+        }
+
+        // 返回首页
+        function goToDashboard() {
+            window.location.href = '/';
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (puzzleType === 'maze') {
+                const currentPos = findPlayer();
+                const [row, col] = currentPos;
+                
+                switch(e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        movePlayer(row - 1, col);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        movePlayer(row + 1, col);
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        movePlayer(row, col - 1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        movePlayer(row, col + 1);
+                        break;
+                }
+            } else if (puzzleType === 'sokoban') {
+                const currentPos = findSokobanPlayer();
+                const [row, col] = currentPos;
+                
+                switch(e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        moveSokobanPlayer(row - 1, col);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        moveSokobanPlayer(row + 1, col);
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        moveSokobanPlayer(row, col - 1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        moveSokobanPlayer(row, col + 1);
+                        break;
+                }
+            }
+        });
+
+        // AI助手功能
+        let isDraggingAssistant = false;
+        let offsetX, offsetY;
+
+        // 打开/关闭AI助手
+        function toggleAssistant() {
+            const modal = document.getElementById('assistant-modal');
+            if (modal.classList.contains('active')) {
+                closeAssistant();
+            } else {
+                modal.classList.add('active');
+            }
+        }
+
+        function closeAssistant() {
+            document.getElementById('assistant-modal').classList.remove('active');
+        }
+
+        // AI助手拖动功能
+        const aiButton = document.getElementById('ai-assistant');
+        aiButton.addEventListener('mousedown', startDragAssistant);
+
+        function startDragAssistant(e) {
+            isDraggingAssistant = true;
+            const rect = aiButton.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            aiButton.classList.add('dragging');
+            document.addEventListener('mousemove', onDragAssistant);
+            document.addEventListener('mouseup', stopDragAssistant);
+            e.preventDefault();
+        }
+
+        function onDragAssistant(e) {
+            if (!isDraggingAssistant) return;
+            
+            let x = e.clientX - offsetX;
+            let y = e.clientY - offsetY;
+            
+            // 限制在视窗内
+            const maxX = window.innerWidth - aiButton.offsetWidth;
+            const maxY = window.innerHeight - aiButton.offsetHeight;
+            x = Math.max(0, Math.min(x, maxX));
+            y = Math.max(0, Math.min(y, maxY));
+            
+            aiButton.style.left = x + 'px';
+            aiButton.style.top = y + 'px';
+            aiButton.style.right = 'auto';
+            aiButton.style.bottom = 'auto';
+        }
+
+        function stopDragAssistant() {
+            isDraggingAssistant = false;
+            aiButton.classList.remove('dragging');
+            document.removeEventListener('mousemove', onDragAssistant);
+            document.removeEventListener('mouseup', stopDragAssistant);
+        }
+
+        // 游戏相关的AI回答
+        const gameResponses = {
+            '下一步': getGameHint,
+            '提示': getGameHint,
+            '帮助': getGameHint,
+            '怎么玩': getGameHint,
+            '策略': getGameHint,
+            '建议': getGameHint,
+            '迷宫': '迷宫游戏中，尝试沿着开放的路径前进，使用BFS算法可以找到最短路径。遇到死路时记得回溯。',
+            '推箱子': '推箱子游戏中，先将箱子推到目标附近，注意不要把箱子推到死角。合理规划推动顺序很重要。',
+            '拼图': '拼图游戏中，可以使用A*算法。先还原边缘的方块，再逐步填充内部。',
+            '八数码': '八数码问题可以使用A*算法，曼哈顿距离是很好的启发式函数。注意数字的排列规律。',
+            'n皇后': 'N皇后问题需要使用回溯法，每行放一个皇后，检查列和对角线的冲突。',
+            '数独': '数独游戏中，先填写确定的数字，利用排除法逐步推导。注意每行、每列和每个宫格的约束。',
+            '移动': '使用方向键↑↓←→或点击相邻格子进行移动。',
+            '算法': '当前游戏推荐使用的算法：' + getRecommendedAlgorithm(),
+            '卡住了': '别着急！可以尝试使用算法求解功能，或者点击提示按钮获取帮助。',
+            '怎么做': getGameHint,
+            '下一步怎么做': getGameHint,
+            '该怎么办': getGameHint
+        };
+
+        function getRecommendedAlgorithm() {
+            const algorithms = {
+                'maze': 'BFS或A*算法',
+                'sokoban': 'A*算法',
+                'puzzle': 'A*算法',
+                'eight_puzzle': 'A*算法',
+                'nqueen': '回溯法',
+                'sudoku': '约束传播+回溯'
+            };
+            return algorithms[puzzleType] || '搜索算法';
+        }
+
+        function getGameHint() {
+            const hints = {
+                'maze': '尝试使用BFS算法找到最短路径。观察迷宫结构，寻找从起点到终点的可行路线。',
+                'sokoban': '先把箱子推到目标附近，注意不要推到死角。规划好推动顺序，从最远的箱子开始。',
+                'puzzle': '使用A*算法可以高效解决拼图问题。先还原第一行，再还原第一列，逐步向内填充。',
+                'eight_puzzle': '观察数字的排列规律，逐步调整。曼哈顿距离可以帮助评估当前状态的好坏。',
+                'nqueen': '每行只能放一个皇后，注意对角线冲突。可以使用回溯法尝试所有可能。',
+                'sudoku': '先填确定的数字，再逐步推导。使用排除法找到每个格子唯一可能的数字。'
+            };
+            return hints[puzzleType] || '继续努力！';
+        }
+
+        // 发送消息给AI助手
+        function sendAssistantMessage() {
+            const input = document.getElementById('assistant-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addAssistantMessage(message, 'user');
+            input.value = '';
+
+            // 查找预设回答
+            let response = gameResponses[message.toLowerCase()];
+            
+            // 如果是函数，调用它获取回答
+            if (typeof response === 'function') {
+                response = response();
+            }
+            
+            // 如果没有预设回答，尝试匹配关键词
+            if (!response) {
+                for (const [key, value] of Object.entries(gameResponses)) {
+                    if (message.toLowerCase().includes(key)) {
+                        response = typeof value === 'function' ? value() : value;
+                        break;
+                    }
+                }
+            }
+
+            if (!response) {
+                response = '抱歉，我不太明白你的问题。你可以问我关于游戏策略、算法选择等问题。';
+            }
+
+            // 模拟思考延迟
+            setTimeout(() => {
+                addAssistantMessage(response, 'assistant');
+            }, 500);
+        }
+
+        // 添加消息到聊天窗口
+        async function sendAssistantMessage() {
+            const input = document.getElementById('assistant-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addAssistantMessage(message, 'user');
+            input.value = '';
+
+            const thinking = addAssistantMessage('正在思考...', 'assistant');
+            try {
+                const res = await fetch('/api/assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: message,
+                        context: {
+                            page: 'play',
+                            puzzle_type: puzzleType,
+                            algorithm: document.getElementById('algorithm').value
+                        }
+                    })
+                });
+                const data = await res.json();
+                let response = data.response || data.answer || data.error || '学习助手暂时没有返回内容。';
+                if (data.source) {
+                    response += `\n\n来源：${data.source === 'deepseek' ? 'DeepSeek API' : '本地知识库'}`;
+                }
+                thinking.querySelector('.chat-bubble').textContent = response;
+            } catch (error) {
+                thinking.querySelector('.chat-bubble').textContent = '学习助手连接失败，请确认 Flask 服务已启动，并检查 API Key 配置。';
+            }
+        }
+
+        function addAssistantMessage(text, type) {
+            const container = document.getElementById('assistant-chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="chat-avatar">👤</div>
+                    <div class="chat-bubble">${text}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="chat-avatar">🤖</div>
+                    <div class="chat-bubble">${text}</div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+            return messageDiv;
+        }
+
+        // 初始化
+        initGame();
+    </script>
+</body>
+</html>

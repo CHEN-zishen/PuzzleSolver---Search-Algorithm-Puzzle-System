@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 搜索算法解谜系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-links .active {
+            background: rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* 个人信息卡片 */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .profile-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .profile-info p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 内容区域 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* 侧边导航 */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar-menu a.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: white;
+            border-left: 3px solid #667eea;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 学习进度 */
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .level-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .level-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .level-item.completed {
+            background: rgba(72, 187, 120, 0.2);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .level-item.locked {
+            opacity: 0.5;
+        }
+
+        .level-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .level-name {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 收藏列表 */
+        .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .favorite-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+
+        .favorite-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .favorite-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .favorite-info {
+            flex: 1;
+        }
+
+        .favorite-title {
+            font-size: 1.1rem;
+            margin-bottom: 3px;
+        }
+
+        .favorite-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .remove-favorite {
+            padding: 10px 20px;
+            background: rgba(255, 87, 87, 0.2);
+            border: 1px solid rgba(255, 87, 87, 0.3);
+            border-radius: 8px;
+            color: #ff5757;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .remove-favorite:hover {
+            background: rgba(255, 87, 87, 0.3);
+        }
+
+        /* 帮助中心 */
+        .help-section {
+            line-height: 1.8;
+        }
+
+        .help-section h3 {
+            font-size: 1.2rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: rgba(102, 126, 234, 0.9);
+        }
+
+        .help-section h4 {
+            font-size: 1rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .help-section p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .help-section li {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .help-section li::before {
+            content: '•';
+            position: absolute;
+            left: -15px;
+            color: #667eea;
+        }
+
+        .contact-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .contact-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* 设置页面 */
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input {
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 最近活动 */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.complete {
+            background: rgba(72, 187, 120, 0.2);
+        }
+
+        .activity-icon.learn {
+            background: rgba(79, 172, 254, 0.2);
+        }
+
+        .activity-icon.game {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1 onclick="window.location.href='/'" style="cursor: pointer;">🧩 搜索算法解谜系统</h1>
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/learn">学习</a>
+            <a href="/profile" class="active">个人中心</a>
+            <a href="/logout">退出</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 个人信息头部 -->
+        <div class="profile-header">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-info">
+                <h2>{{ current_user.username }}</h2>
+                <p>{{ current_user.email }}</p>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ completed_count }}</div>
+                        <div class="stat-label">已完成关卡</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ total_count }}</div>
+                        <div class="stat-label">总关卡数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ favorites_count }}</div>
+                        <div class="stat-label">收藏数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content-grid">
+            <!-- 侧边导航 -->
+            <aside class="sidebar">
+                <h3>菜单</h3>
+                <ul class="sidebar-menu">
+                    <li><a href="#progress" class="active" onclick="showSection('progress')">📊 学习进度</a></li>
+                    <li><a href="#favorites" onclick="showSection('favorites')">⭐ 我的收藏</a></li>
+                    <li><a href="#help" onclick="showSection('help')">❓ 帮助中心</a></li>
+                    <li><a href="#settings" onclick="showSection('settings')">⚙️ 账户设置</a></li>
+                </ul>
+            </aside>
+
+            <!-- 主内容 -->
+            <main class="main-content">
+                <!-- 学习进度 -->
+                <section id="progress-section">
+                    <h2 class="section-title">📊 学习进度</h2>
+                    
+                    <div class="progress-section">
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <span>总体进度</span>
+                                <span>{{ progress_percent }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ progress_percent }}%"></div>
+                            </div>
+                            <div class="progress-details">
+                                <span>已完成 {{ completed_count }} 个关卡</span>
+                                <span>剩余 {{ total_count - completed_count }} 个关卡</span>
+                            </div>
+                        </div>
+
+                        <h3>关卡完成情况</h3>
+                        <div class="level-grid">
+                            {% for level in levels %}
+                            <div class="level-item {% if level.id in completed_levels %}completed{% endif %}">
+                                <div class="level-number">{{ level.order }}</div>
+                                <div class="level-name">{{ level.name }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <h3>最近活动</h3>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon complete">✅</div>
+                            <div class="activity-content">
+                                <div class="activity-title">完成了迷宫第1关</div>
+                                <div class="activity-time">2小时前</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon learn">📚</div>
+                            <div class="activity-content">
+                                <div class="activity-title">学习了BFS算法</div>
+                                <div class="activity-time">5小时前</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon game">🎮</div>
+                            <div class="activity-content">
+                                <div class="activity-title">挑战了N皇后问题</div>
+                                <div class="activity-time">昨天</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 我的收藏 -->
+                <section id="favorites-section" style="display: none;">
+                    <h2 class="section-title">⭐ 我的收藏</h2>
+                    {% if favorites %}
+                    <div class="favorites-list">
+                        {% for fav in favorites %}
+                        <div class="favorite-item">
+                            <div class="favorite-icon">📚</div>
+                            <div class="favorite-info">
+                                <div class="favorite-title">{{ fav.title }}</div>
+                                <div class="favorite-desc">{{ fav.description }}</div>
+                            </div>
+                            <button class="remove-favorite" onclick="removeFavorite('{{ fav.id }}')">移除</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>暂无收藏内容</p>
+                        <p style="font-size: 0.9rem;">在学习页面收藏你感兴趣的算法知识</p>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- 帮助中心 -->
+                <section id="help-section" style="display: none;">
+                    <h2 class="section-title">❓ 帮助中心</h2>
+                    
+                    <div class="help-section">
+                        <h3>🎮 游戏玩法指南</h3>
+                        
+                        <h4>迷宫游戏</h4>
+                        <p>通过方向键或点击移动角色，找到从起点到终点的路径。可以使用不同的搜索算法自动求解。</p>
+                        <ul>
+                            <li>DFS（深度优先搜索）：优先探索深度</li>
+                            <li>BFS（广度优先搜索）：保证最短路径</li>
+                            <li>A*算法：启发式搜索，效率更高</li>
+                        </ul>
+
+                        <h4>八数码游戏</h4>
+                        <p>通过滑动数字方块，将打乱的数字排列成正确顺序。使用A*算法可以找到最优解。</p>
+
+                        <h4>N皇后问题</h4>
+                        <p>在棋盘上放置N个皇后，使它们互不攻击。学习回溯算法的经典案例。</p>
+
+                        <h4>数独游戏</h4>
+                        <p>完成9x9的数独谜题，每行、每列、每个3x3宫格内数字1-9不重复。</p>
+
+                        <h4>推箱子游戏</h4>
+                        <p>将所有箱子推到目标位置，锻炼逻辑思维和路径规划能力。</p>
+
+                        <h3>📚 学习功能使用</h3>
+                        <p>点击首页的"学习算法知识"进入学习页面，探索算法知识图谱，了解各种搜索算法的原理和应用场景。</p>
+
+                        <h3>💬 AI助手</h3>
+                        <p>点击右下角的AI助手按钮，可以获得算法学习指导，解答你的疑问。</p>
+
+                        <h3>📊 个人中心</h3>
+                        <p>在个人中心可以查看学习进度、管理收藏内容、获取帮助信息和修改账户设置。</p>
+
+                        <h3>🔍 常见问题</h3>
+                        
+                        <h4>Q: 如何开始游戏？</h4>
+                        <p>A: 点击首页的"算法挑战游戏"，选择游戏类型和关卡，然后点击"开始挑战"。</p>
+
+                        <h4>Q: 如何使用算法自动求解？</h4>
+                        <p>A: 在游戏界面上方的算法选择菜单中选择一种算法，点击"播放"按钮即可观看算法自动求解过程。</p>
+
+                        <h4>Q: 如何收藏内容？</h4>
+                        <p>A: 在学习页面，点击内容卡片上的收藏按钮即可添加到收藏列表。</p>
+
+                        <h4>Q: 进度数据保存在哪里？</h4>
+                        <p>A: 所有进度数据都会自动保存到服务器，登录后可以在任意设备上查看。</p>
+
+                        <div class="contact-info">
+                            <h4>📧 联系我们</h4>
+                            <p>如果您在使用过程中遇到问题或有任何建议，欢迎联系我们：</p>
+                            <p>邮箱：<a href="mailto:23zschen@stu.edu.cn">23zschen@stu.edu.cn</a></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 账户设置 -->
+                <section id="settings-section" style="display: none;">
+                    <h2 class="section-title">⚙️ 账户设置</h2>
+                    
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" value="{{ current_user.username }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" value="{{ current_user.email }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>修改密码</label>
+                            <input type="password" placeholder="输入新密码">
+                        </div>
+                        <div class="form-group">
+                            <label>确认密码</label>
+                            <input type="password" placeholder="再次输入新密码">
+                        </div>
+                        <button type="button" class="btn-primary" onclick="updateProfile()">保存修改</button>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // 隐藏所有区域
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('favorites-section').style.display = 'none';
+            document.getElementById('help-section').style.display = 'none';
+            document.getElementById('settings-section').style.display = 'none';
+
+            // 显示选中的区域
+            document.getElementById(sectionId + '-section').style.display = 'block';
+
+            // 更新导航高亮
+            const navLinks = document.querySelectorAll('.sidebar-menu a');
+            navLinks.forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function removeFavorite(id) {
+            if (confirm('确定要移除这个收藏吗？')) {
+                alert('收藏已移除');
+            }
+        }
+
+        function updateProfile() {
+            alert('设置已保存');
+        }
+    </script>
+</body>
+</html>
